@@ -15,3 +15,4 @@ This document records the data quality issues identified during source data prof
 | 9 | Incomplete time periods | Early 2016 and the final months of 2018 contain very few transactions. | Time-series analyses may be distorted by partial reporting periods. | Restrict trend analysis to the representative period (January 2017 – August 2018). |
 | 10 | Non-delivered orders cannot participate in delivery analysis | Approximately 3% of orders were canceled, unavailable, or otherwise undelivered. | Transit time and delivery delay metrics would be inaccurate if all orders were included. | Build delivery KPIs using delivered orders only. |
 | 11 | Products with missing/untranslated category | 624 products → category_en = 'unknown' | Null category names in dim_product | COALESCE to 'unknown' fallback |
+| 12 | Customer zips not in geolocation reference | 302 order_items → geography_sk = -1 | Missing geography for some orders | Routed to Unknown member (-1), rows retained |
