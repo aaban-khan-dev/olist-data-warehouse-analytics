@@ -168,3 +168,6 @@ Maps Portuguese product categories to English.
 
 - Used during product dimension construction.
 - Missing translations are assigned to an **Unknown** member during ETL.
+
+
+- RFM: Champions + Big Spenders = ~3.5% of customers but spend 1.7-2.2x the average (R$372/R$279 vs R$166 baseline). Large "At Risk" segment reflects the low ~3.4% repeat rate.
