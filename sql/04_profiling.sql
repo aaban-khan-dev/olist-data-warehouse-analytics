@@ -1,7 +1,7 @@
 use OlistDW;
 GO
 
--- customers: is customer_id unique? (note: customer_id vs customer_unique_id differ!)
+-- customers: is customer_id unique? 
 SELECT COUNT(*) total, COUNT(DISTINCT customer_id) distinct_cust_id,
        COUNT(DISTINCT customer_unique_id) distinct_unique_id
 FROM staging.customers;
@@ -9,7 +9,7 @@ FROM staging.customers;
 -- orders: one row per order?
 SELECT COUNT(*) total, COUNT(DISTINCT order_id) distinct_orders FROM staging.orders;
 
--- order_items: what's the grain? (hint: order_id alone is NOT unique)
+-- order_items: finding Grain
 SELECT COUNT(*) total,
        COUNT(DISTINCT order_id) distinct_orders,
        COUNT(DISTINCT CONCAT(order_id, '-', order_item_id)) distinct_order_item
