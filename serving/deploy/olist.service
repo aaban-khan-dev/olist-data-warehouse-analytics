@@ -1,0 +1,18 @@
+[Unit]
+Description=uWSGI serving the Olist freight dashboard
+After=network.target postgresql.service
+
+[Service]
+User=ubuntu
+Group=www-data
+RuntimeDirectory=olist
+WorkingDirectory=/home/ubuntu/olist_dashboard
+ExecStart=/home/ubuntu/olist_dashboard/venv/bin/uwsgi --ini /home/ubuntu/olist_dashboard/deploy/uwsgi.ini
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGQUIT
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

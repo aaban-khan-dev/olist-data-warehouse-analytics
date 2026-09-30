@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olist Freight Analysis</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<style>
+  :root {
+    --navy: #16335c;
+    --navy-dark: #0f2444;
+    --accent: #2d6cb5;
+    --ink: #1b2430;
+    --muted: #6b7684;
+    --line: #dfe4ea;
+    --bg: #f4f6f9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 24px 20px 56px; }
+
+  header h1 {
+    margin: 0 0 4px;
+    color: var(--navy);
+    font-size: 30px;
+    letter-spacing: .3px;
+  }
+  header p { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+
+  form.filters {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    background: var(--navy); border-radius: 10px;
+    padding: 16px 18px; margin-bottom: 20px;
+  }
+  form.filters label {
+    display: block; color: #c7d4e8;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: .8px; margin-bottom: 5px;
+  }
+  form.filters select {
+    min-width: 170px; padding: 8px 10px;
+    border: 1px solid #2c4470; border-radius: 6px;
+    font-size: 14px; background: #fff; color: var(--ink);
+  }
+  form.filters button, form.filters a.reset {
+    padding: 9px 18px; border-radius: 6px; font-size: 14px;
+    border: 0; cursor: pointer; text-decoration: none;
+  }
+  form.filters button { background: var(--accent); color: #fff; }
+  form.filters a.reset { background: transparent; color: #c7d4e8; border: 1px solid #47618c; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .kpi {
+    background: #fff; border-radius: 10px; padding: 18px 20px;
+    border-left: 4px solid var(--accent);
+    box-shadow: 0 1px 3px rgba(20,35,60,.08);
+  }
+  .kpi .v { font-size: 28px; font-weight: 650; color: var(--navy); line-height: 1.1; }
+  .kpi .l { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: #fff; border-radius: 10px; padding: 16px 18px 6px;
+    box-shadow: 0 1px 3px rgba(20,35,60,.08);
+  }
+  .card h2 {
+    margin: 0 0 6px; font-size: 15px;
+    color: var(--navy); font-weight: 620;
+  }
+  .card .sub { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .chart { width: 100%; height: 300px; }
+
+  footer {
+    margin-top: 28px; padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); line-height: 1.7;
+  }
+  code { background: #eaeef3; padding: 1px 5px; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Olist Freight Analysis</h1>
+    <p>Freight cost, revenue contribution and profitability across Brazilian product categories and states.</p>
+  </header>
+
+  <form class="filters" method="get">
+    <div>
+      <label for="year">Year</label>
+      <select name="year" id="year">
+        <option value="">All</option>
+        {% for y in years %}
+          <option value="{{ y }}" {% if selected.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="state">Customer State</label>
+      <select name="state" id="state">
+        <option value="">All</option>
+        {% for s in state_opts %}
+          <option value="{{ s }}" {% if selected.state == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="category">Category</label>
+      <select name="category" id="category">
+        <option value="">All</option>
+        {% for c in category_opts %}
+          <option value="{{ c }}" {% if selected.category == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">Apply</button>
+    {% if has_filters %}<a class="reset" href="{% url 'freight_analysis' %}">Reset</a>{% endif %}
+  </form>
+
+  <section class="kpis">
+    <div class="kpi">
+      <div class="v">R${{ kpis.total_revenue_fmt }}</div>
+      <div class="l">Total Revenue</div>
+    </div>
+    <div class="kpi">
+      <div class="v">{{ kpis.freight_pct|floatformat:2 }}%</div>
+      <div class="l">Freight % of Revenue</div>
+    </div>
+    <div class="kpi">
+      <div class="v">R${{  kpis.total_freight_fmt }}</div>
+      <div class="l">Total Freight</div>
+    </div>
+    <div class="kpi">
+      <div class="v">R${{ kpis.avg_freight_per_item|floatformat:2 }}</div>
+      <div class="l">Avg Freight per Item</div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Freight % of Revenue Over Time</h2>
+      <p class="sub">Monthly, by order purchase date</p>
+      <div id="trend" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>Top Categories by Freight Cost %</h2>
+      <p class="sub">Categories with at least R$1,000 revenue</p>
+      <div id="categories" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>Revenue by Category</h2>
+      <p class="sub">Top 6 categories by total item price</p>
+      <div id="revenue" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>Top States by Freight Cost %</h2>
+      <p class="sub">Destination state, ranked by freight burden</p>
+      <div id="states" class="chart"></div>
+    </div>
+  </section>
+
+  <footer>
+    {{ kpis.item_count }} order items in scope &middot;
+    Freight % is <code>SUM(freight_value) / SUM(price)</code>, the ratio of totals rather than the mean of per-row ratios.<br>
+    Served by Django and uWSGI behind Nginx, reading a PostgreSQL mart ported from the SQL Server warehouse.
+  </footer>
+
+</div>
+
+<script id="chart-data" type="application/json">{{ charts|safe }}</script>
+<script>
+  const D = JSON.parse(document.getElementById('chart-data').textContent);
+  const NAVY = '#16335c', ACCENT = '#2d6cb5';
+  const FONT = { family: 'Segoe UI, system-ui, sans-serif', size: 11, color: '#4a5563' };
+  const BASE = {
+    margin: { l: 58, r: 18, t: 10, b: 46 },
+    font: FONT,
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    showlegend: false
+  };
+  const CFG = { displayModeBar: false, responsive: true };
+
+  Plotly.newPlot('trend', [{
+    x: D.trend.labels, y: D.trend.values,
+    type: 'scatter', mode: 'lines',
+    line: { color: ACCENT, width: 2 },
+    hovertemplate: '%{x}<br>%{y:.2f}%<extra></extra>'
+  }], Object.assign({}, BASE, {
+    xaxis: { tickangle: -45, gridcolor: '#eef1f5' },
+    yaxis: { ticksuffix: '%', gridcolor: '#eef1f5', title: { text: 'Freight % of Revenue', font: FONT } }
+  }), CFG);
+
+  Plotly.newPlot('categories', [{
+    x: D.categories.values.slice().reverse(),
+    y: D.categories.labels.slice().reverse(),
+    type: 'bar', orientation: 'h',
+    marker: { color: NAVY },
+    text: D.categories.values.slice().reverse().map(v => v.toFixed(2) + '%'),
+    textposition: 'auto',
+    hovertemplate: '%{y}<br>%{x:.2f}%<extra></extra>'
+  }], Object.assign({}, BASE, {
+    margin: { l: 175, r: 34, t: 10, b: 40 },
+    xaxis: { ticksuffix: '%', gridcolor: '#eef1f5' },
+    yaxis: { automargin: true }
+  }), CFG);
+
+  Plotly.newPlot('revenue', [{
+    labels: D.revenue.labels, values: D.revenue.values,
+    type: 'pie', hole: 0.55,
+    marker: { colors: ['#16335c', '#2d6cb5', '#4f8fd4', '#7fb0e2', '#a9cbee', '#cfe1f6'] },
+    textinfo: 'percent',
+    hovertemplate: '%{label}<br>R$%{value:,.0f}<extra></extra>'
+  }], Object.assign({}, BASE, {
+    showlegend: true,
+    legend: { orientation: 'v', x: 1, y: 0.5, font: { size: 10 } },
+    margin: { l: 10, r: 10, t: 10, b: 10 }
+  }), CFG);
+
+  Plotly.newPlot('states', [{
+    x: D.states.labels, y: D.states.values,
+    type: 'bar',
+    marker: { color: ACCENT },
+    text: D.states.values.map(v => v.toFixed(2) + '%'),
+    textposition: 'outside',
+    hovertemplate: '%{x}<br>%{y:.2f}%<extra></extra>'
+  }], Object.assign({}, BASE, {
+    xaxis: { gridcolor: '#eef1f5' },
+    yaxis: { ticksuffix: '%', gridcolor: '#eef1f5', title: { text: 'Freight % of Revenue', font: FONT } }
+  }), CFG);
+</script>
+</body>
+</html>
